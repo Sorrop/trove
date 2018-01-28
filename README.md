@@ -1,6 +1,6 @@
 # trove
 
-A Clojure library designed to ... well, that part is up to you.
+Caching experimentations in clojure
 
 ## Usage
 
