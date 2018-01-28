@@ -8,8 +8,8 @@
 
 (deftype atomic-cache [atm limit]
   cache
-  (search [self args] (find @atm args))
-  (clean [self] (when (>  (count @atm) limit)
+  (search [self args] (get @atm args))
+  (clean [self] (when (= (count @atm) limit)
                   (reset! atm {})))
   (store [self args output] (do
                               (clean self)
@@ -17,13 +17,11 @@
   (fetch [self] atm))
 
 (defn cached-fn [function limit]
-  (let [cstore (atomic-cache. (atom {}) 100)]
+  (let [cstore (atomic-cache. (atom {}) limit)]
     (with-meta
       (fn [& args]
-        (or (apply (partial search cstore) args)
+        (or (search cstore args)
             (let [res (apply function args)]
               (store cstore args res)
               res)))
       {:cache cstore})))
-
-
