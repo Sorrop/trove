@@ -19,6 +19,11 @@
       :stored
       first))
 
+(defn last-lifo [c-fun]
+  (-> (inspect-cached c-fun)
+      :stored
+      last))
+
 (defn hypotenuse
   [a b]
   (java.lang.Math/sqrt (+ (* a a) (* b b))))
@@ -52,6 +57,13 @@
     (apply c-fun excess)
     (= limit (size-of-cache c-fun))))
 
+(defn lifo-respects-limit?
+  [fun limit input excess]
+  (let [c-fun (lifo-cached-fn fun limit)]
+    (apply-seq c-fun input)
+    (apply c-fun excess)
+    (= limit (size-of-cache c-fun))))
+
 (defn fifo?
   [fun limit input excess]
   (let [c-fun        (fifo-cached-fn fun limit)
@@ -61,6 +73,16 @@
         first-out?   (do (apply c-fun excess)
                          (not= fin (peek-stored c-fun)))]
     (and first-in? first-out?)))
+
+(defn lifo?
+  [fun limit input excess]
+  (let [c-fun        (lifo-cached-fn fun limit)
+        lin          (last input)
+        last-in?    (do (apply-seq c-fun input)
+                        (= lin (peek-stored c-fun)))
+        first-out?   (do (apply c-fun excess)
+                         (not= lin (peek-stored c-fun)))]
+    (and last-in? first-out?)))
 
 
 
@@ -73,4 +95,6 @@
   (testing "Test caching facilities"
     (is (cached? cached-hyp-fifo 3 4))
     (is (fifo-respects-limit? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))
-    (is (fifo? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))))
+    (is (lifo-respects-limit? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))
+    (is (fifo? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))
+    (is (lifo? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))))
