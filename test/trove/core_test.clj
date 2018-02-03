@@ -1,11 +1,12 @@
 (ns trove.core-test
   (:require [clojure.test :refer :all]
-            [trove.core :refer :all]))
+            [trove.core :refer :all]
+            [trove.atomic-cache :refer :all]))
 
 (defn inspect-cached [c-fun]
   (-> (meta c-fun)
       :cache
-      (fetch)
+      (.fetch)
       deref))
 
 (defn size-of-cache [c-fun]
@@ -37,7 +38,7 @@
   (let [res (apply c-fn args)]
     (= (-> (meta c-fn)
            :cache
-           (search args))
+           (.search args))
        res)))
 
 (defn apply-seq [c-fun input]
@@ -66,7 +67,7 @@
 (comment
   (-> (meta cached-hyp)
       :cache
-      (search [3 4])))
+      (.search [3 4])))
 
 (deftest basic-test
   (testing "Test caching facilities"
