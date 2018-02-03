@@ -8,16 +8,23 @@
 
 (deftype atomic-cache [atm limit]
   cache
-  (search [self args] (get @atm args))
-  (clean [self] (when (= (count @atm) limit)
-                  (reset! atm {})))
-  (store [self args output] (do
+  (search [self args] (get-in @atm [:mappings args]))
+  (clean [self] (let [{:keys [mappings
+                              stored]} @atm
+                      lru              (first stored)]
+                  (when (= (count mappings) limit)
+                    (reset! atm {:mappings (dissoc mappings lru)
+                                 :stored   (rest stored)}))))
+  (store [self args output] (let [{:keys [mappings stored]} @atm]
                               (clean self)
-                              (swap! atm assoc args output)))
+                              (reset! atm
+                                      {:mappings (assoc mappings args output)
+                                       :stored   (conj stored args)})))
   (fetch [self] atm))
 
 (defn cached-fn [function limit]
-  (let [cstore (atomic-cache. (atom {}) limit)]
+  (let [cstore (atomic-cache. (atom {:mappings {}
+                                     :stored   []}) limit)]
     (with-meta
       (fn [& args]
         (or (search cstore args)
