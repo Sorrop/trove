@@ -17,3 +17,11 @@
                                          limit
                                          :fifo)]
     (cached function cstore)))
+
+(defn lifo-cached-fn [function limit]
+  (let [cstore (cache/->sequential-cache (atom {:mappings {}
+                                                :stored   '()})
+                                         limit
+                                         :lifo)]
+    (cached function cstore)))
+
