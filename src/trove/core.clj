@@ -11,7 +11,7 @@
     {:cache cstore}))
 
 
-(defn cached-fn [function limit]
+(defn fifo-cached-fn [function limit]
   (let [cstore (cache/->sequential-cache (atom {:mappings {}
                                                 :stored   []})
                                          limit

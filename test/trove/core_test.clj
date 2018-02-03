@@ -23,8 +23,8 @@
   [a b]
   (java.lang.Math/sqrt (+ (* a a) (* b b))))
 
-(def cached-hyp
-  (cached-fn hypotenuse 100))
+(def cached-hyp-fifo
+  (fifo-cached-fn hypotenuse 100))
 
 (defn fact [n]
   (if (= 1 n)
@@ -32,7 +32,7 @@
     (*' n (fact (dec n)))))
 
 (def cached-fact
-  (cached-fn fact 100))
+  (fifo-cached-fn fact 100))
 
 (defn cached? [c-fn & args]
   (let [res (apply c-fn args)]
@@ -45,16 +45,16 @@
   (doseq [args input]
     (apply c-fun args)))
 
-(defn respects-limit?
+(defn fifo-respects-limit?
   [fun limit input excess]
-  (let [c-fun (cached-fn fun limit)]
+  (let [c-fun (fifo-cached-fn fun limit)]
     (apply-seq c-fun input)
     (apply c-fun excess)
     (= limit (size-of-cache c-fun))))
 
 (defn fifo?
   [fun limit input excess]
-  (let [c-fun        (cached-fn fun limit)
+  (let [c-fun        (fifo-cached-fn fun limit)
         fin          (first input)
         first-in?    (do (apply-seq c-fun input)
                          (= fin (peek-stored c-fun)))
@@ -71,6 +71,6 @@
 
 (deftest basic-test
   (testing "Test caching facilities"
-    (is (cached? cached-hyp 3 4))
-    (is (respects-limit? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))
+    (is (cached? cached-hyp-fifo 3 4))
+    (is (fifo-respects-limit? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))
     (is (fifo? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))))
