@@ -86,9 +86,38 @@
              :ages     (assoc new-ages args 0)
              :indexed-ages new-indexed-ages})))
 
+(defn update-recencies!
+  [policy atm args]
+  (let [{:keys [mappings
+                ages
+                indexed-ages]} @atm
+        comparator             (get {:lru < :mru >} policy)
+        new-ages               (->> (seq ages)
+                                    (reduce (fn [acc [k v]]
+                                              (if (= k args)
+                                                (assoc acc k v)
+                                                (assoc acc k (inc v))))
+                                            {}))
+        new-indexed-ages       (let [arg-age (get ages args)]
+                                 (if (get indexed-ages arg-age)
+                                   (-> (->> (dissoc indexed-ages arg-age)
+                                            (reduce (fn [acc [k v]]
+                                                      (assoc acc (inc k) v))
+                                                    (sorted-map-by comparator)))
+                                       (assoc (get new-ages args) args))
+                                   (-> (reduce (fn [acc [k v]]
+                                                 (assoc acc (inc k) v))
+                                               (sorted-map-by comparator))
+                                       (assoc (get new-ages args) args))))]
+    (reset! atm {:mappings mappings
+                 :ages new-ages
+                 :indexed-ages new-indexed-ages})))
+
 (deftype recency-cache [atm space-lim policy]
   atomic-cache
-  (search [self args] (get-in @atm [:mappings args]))
+  (search [self args] (when-let [content (get-in @atm [:mappings args])]
+                        (update-recencies! policy atm args)
+                        content))
   (size [self] (-> @atm :mappings count))
   (full? [self] (= (size self) space-lim))
   (store [self args output] (let [{:keys [mappings ages]} @atm]
