@@ -43,12 +43,15 @@
                                          :stored   (conj stored args)}))))
   (fetch [self] atm))
 
+(def ru-policy->compr
+  {:lru > :mru <})
+
 (defn recent-replace!
   [policy atm args output]
   (let [{:keys [mappings
                 ages
                 indexed-ages]} @atm
-        comparator             (get {:lru < :mru >} policy)
+        comparator             (get ru-policy->compr policy)
         [recent-age
          recent-args]          (first indexed-ages)
         indexed-ages-without   (->> (dissoc indexed-ages recent-args)
@@ -70,7 +73,7 @@
   (let [{:keys [mappings
                 ages
                 indexed-ages]} @atm
-        comparator             (get {:lru < :mru >} policy)
+        comparator             (get ru-policy->compr policy)
         new-mappings           (assoc mappings args output)
         new-ages               (->> (seq ages)
                                     (reduce (fn [acc [k v]]
@@ -91,7 +94,7 @@
   (let [{:keys [mappings
                 ages
                 indexed-ages]} @atm
-        comparator             (get {:lru < :mru >} policy)
+        comparator             (get ru-policy->compr policy)
         new-ages               (->> (seq ages)
                                     (reduce (fn [acc [k v]]
                                               (if (= k args)

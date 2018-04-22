@@ -28,7 +28,7 @@
 (defn lru-cached-fn [function space-lim]
   (let [cstore (cache/->recency-cache (atom {:mappings {}
                                              :ages     {}
-                                             :indexed-ages (sorted-map-by <)})
+                                             :indexed-ages (sorted-map-by >)})
                                       space-lim
                                       :lru)]
     (cached function cstore)))
@@ -36,7 +36,7 @@
 (defn mru-cached-fn [function space-lim]
   (let [cstore (cache/->recency-cache (atom {:mappings {}
                                              :ages     {}
-                                             :indexed-ages (sorted-map-by >)})
+                                             :indexed-ages (sorted-map-by <)})
                                       space-lim
                                       :mru)]
     (cached function cstore)))
