@@ -31,6 +31,9 @@
 (def cached-hyp-fifo
   (fifo-cached-fn hypotenuse 100))
 
+(def cached-hyp-lru
+  (lru-cached-fn hypotenuse 100))
+
 (defn fact [n]
   (if (= 1 n)
     1
@@ -92,9 +95,13 @@
       (.search [3 4])))
 
 (deftest basic-test
-  (testing "Test caching facilities"
+  (testing "Test sequential caching facilities"
     (is (cached? cached-hyp-fifo 3 4))
     (is (fifo-respects-limit? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))
     (is (lifo-respects-limit? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))
     (is (fifo? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))
     (is (lifo? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))))
+
+(deftest recency-test
+  (testing "Recency testing"
+    (is (cached? cached-hyp-lru 3 4))))
