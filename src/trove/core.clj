@@ -29,6 +29,7 @@
   (let [cstore (cache/->recency-cache (atom {:mappings {}
                                              :ages     {}
                                              :indexed-ages (sorted-map-by <)})
+                                      space-lim
                                       :lru)]
     (cached function cstore)))
 
@@ -36,5 +37,6 @@
   (let [cstore (cache/->recency-cache (atom {:mappings {}
                                              :ages     {}
                                              :indexed-ages (sorted-map-by >)})
+                                      space-lim
                                       :mru)]
     (cached function cstore)))
