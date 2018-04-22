@@ -1,7 +1,9 @@
 (ns trove.core-test
   (:require [clojure.test :refer :all]
             [trove.core :refer :all]
-            [trove.atomic-cache :refer :all]))
+            #_[trove.atomic-cache :refer :all]
+            #_[trove.sequential-cache :refer :all]
+            #_[trove.recency-cache :refer :all]))
 
 (defn inspect-cached [c-fun]
   (-> (meta c-fun)
