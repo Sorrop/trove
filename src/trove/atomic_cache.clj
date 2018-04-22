@@ -54,7 +54,7 @@
         comparator             (get ru-policy->compr policy)
         [recent-age
          recent-args]          (first indexed-ages)
-        indexed-ages-without   (->> (dissoc indexed-ages recent-args)
+        indexed-ages-without   (->> (dissoc indexed-ages recent-age)
                                     (reduce (fn [acc [k v]]
                                               (assoc acc (inc k) v))
                                             (sorted-map-by comparator)))
@@ -67,7 +67,7 @@
     (reset! atm
             {:mappings     (assoc mappings-without args output)
              :ages         (assoc ages-without args 0)
-             :indexed-ages (assoc indexed-ages-without args 0)})))
+             :indexed-ages (assoc indexed-ages-without 0 args)})))
 
 (defn recent-store! [policy atm args output]
   (let [{:keys [mappings
