@@ -87,7 +87,30 @@
                          (not= lin (peek-stored c-fun)))]
     (and last-in? first-out?)))
 
+(defn discarded?
+  [cache value]
+  (and (nil? (get (:mappings cache) value))
+       (nil? (get (:ages cache) value))
+       (nil? (get (set (vals (:indexed-ages cache)))
+                  value))))
 
+(defn lru-simple?
+  [fun limit input excess]
+  (let [c-fun         (lru-cached-fn fun limit)
+        lru           (first input)
+        cache         (do (apply-seq c-fun input)
+                          (apply c-fun excess)
+                          (inspect-cached c-fun))]
+    (discarded? cache lru)))
+
+(defn mru-simple?
+  [fun limit input excess]
+  (let [c-fun         (mru-cached-fn fun limit)
+        mru           (last input)
+        cache         (do (apply-seq c-fun input)
+                          (apply c-fun excess)
+                          (inspect-cached c-fun))]
+    (discarded? cache mru)))
 
 (comment
   (-> (meta cached-hyp)
@@ -104,4 +127,6 @@
 
 (deftest recency-test
   (testing "Recency testing"
-    (is (cached? cached-hyp-lru 3 4))))
+    (is (cached? cached-hyp-lru 3 4))
+    (is (lru-simple? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))
+    (is (mru-simple? hypotenuse 3 [[3 4] [5 12] [6 8]] [21 28]))))
