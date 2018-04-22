@@ -53,7 +53,7 @@
          recent-args]          (first indexed-ages)
         indexed-ages-without   (->> (dissoc indexed-ages recent-args)
                                     (reduce (fn [acc [k v]]
-                                              (assoc acc k (inc v)))
+                                              (assoc acc (inc k) v))
                                             (sorted-map-by comparator)))
         mappings-without       (dissoc mappings recent-args)
         ages-without           (->> (dissoc ages recent-args)
@@ -77,8 +77,9 @@
                                               (assoc acc k (inc v)))
                                             {}))
         new-indexed-ages       (-> (reduce (fn [acc [k v]]
-                                             (assoc acc k (inc v)))
-                                           (sorted-map-by comparator))
+                                             (assoc acc (inc k) v))
+                                           (sorted-map-by comparator)
+                                           indexed-ages)
                                    (assoc 0 args))]
     (reset! atm
             {:mappings new-mappings
