@@ -25,3 +25,16 @@
                                          :lifo)]
     (cached function cstore)))
 
+(defn lru-cached-fn [function space-lim]
+  (let [cstore (cache/->recency-cache (atom {:mappings {}
+                                             :ages     {}
+                                             :indexed-ages (sorted-map-by <)})
+                                      :lru)]
+    (cached function cstore)))
+
+(defn mru-cached-fn [function space-lim]
+  (let [cstore (cache/->recency-cache (atom {:mappings {}
+                                             :ages     {}
+                                             :indexed-ages (sorted-map-by >)})
+                                      :mru)]
+    (cached function cstore)))
