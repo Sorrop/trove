@@ -43,4 +43,56 @@
                                          :stored   (conj stored args)}))))
   (fetch [self] atm))
 
+(defn recent-replace!
+  [policy atm args output]
+  (let [{:keys [mappings
+                ages
+                indexed-ages]} @atm
+        comparator             (get {:lru < :mru >} policy)
+        [recent-age
+         recent-args]          (first indexed-ages)
+        indexed-ages-without   (->> (dissoc indexed-ages recent-args)
+                                    (reduce (fn [acc [k v]]
+                                              (assoc acc k (inc v)))
+                                            (sorted-map-by comparator)))
+        mappings-without       (dissoc mappings recent-args)
+        ages-without           (->> (dissoc ages recent-args)
+                                    seq
+                                    (reduce (fn [acc [k v]]
+                                              (assoc acc k (inc v)))
+                                            {}))]
+    (reset! atm
+            {:mappings     (assoc mappings-without args output)
+             :ages         (assoc ages-without args 0)
+             :indexed-ages (assoc indexed-ages-without args 0)})))
+
+(defn recent-store! [policy atm args output]
+  (let [{:keys [mappings
+                ages
+                indexed-ages]} @atm
+        comparator             (get {:lru < :mru >} policy)
+        new-mappings           (assoc mappings args output)
+        new-ages               (->> (seq ages)
+                                    (reduce (fn [acc [k v]]
+                                              (assoc acc k (inc v)))
+                                            {}))
+        new-indexed-ages       (-> (reduce (fn [acc [k v]]
+                                             (assoc acc k (inc v)))
+                                           (sorted-map-by comparator))
+                                   (assoc 0 args))]
+    (reset! atm
+            {:mappings new-mappings
+             :ages     (assoc new-ages args 0)
+             :indexed-ages new-indexed-ages})))
+
+(deftype recency-cache [atm space-lim policy]
+  atomic-cache
+  (search [self args] (get-in @atm [:mappings args]))
+  (size [self] (-> @atm :mappings count))
+  (full? [self] (= (size self) space-lim))
+  (store [self args output] (let [{:keys [mappings ages]} @atm]
+                              (if (full? self)
+                                (recent-replace! policy atm args output)
+                                (recent-store! policy atm args output))))
+  (fetch [self] atm))
 
